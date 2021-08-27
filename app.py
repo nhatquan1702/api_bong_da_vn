@@ -275,6 +275,65 @@ def post_del(id_post):
 # 4: allow - not exists categroy
 # 5: allow - not contains img
 # 6: success
+@app.route('/quan/add/post/<post_title>/<post_content>', methods=['POST'])
+def quan_add_post_new(post_title,post_content):
+         
+    post_title=post_title.strip()
+    if not post_title:
+        return jsonify({"status":1}),200
+
+    post_content= post_content.strip()
+    if not post_content:
+        return jsonify({"status":2}),200
+    
+    
+    cur = con.cursor()
+    cur.execute("SELECT post_id from post order by post_id desc limit 1")
+    rows = cur.fetchall()
+    lastid= rows[0][0]
+
+    post_img = request.headers.get('post_img')
+    if not post_img:
+        return jsonify({"status":3}),200
+
+    post_id= lastid+1
+    post_status= 0
+    post_view= 0
+    post_create_time= datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+    email= request.headers.get('email')
+    if not email:
+        return jsonify({"status":4}),200
+
+    cur = con.cursor()
+    cur.execute("insert into post values (%s,%s,%s,%s,%s,%s,%s,%s)",(post_id,post_title,post_content,post_img,post_create_time,email,post_status,post_view))
+    con.commit()
+
+    return jsonify({'status':5}),200
+
+@app.route('/quan/post/edit/<int:post_id>/<post_title>/<post_content>',methods=['POST'])
+def nhatquan_post_edit_new(post_id, post_title, post_content):
+
+    if not check_post_exist(post_id):
+        return jsonify({'status':0}),200
+
+    post_title=post_title.strip()
+    if not post_title:
+        return jsonify({"status":1}),200
+
+    post_content= post_content.strip()
+    if not post_content:
+        return jsonify({"status":2}),200
+
+    post_img = request.headers.get('post_img')
+    if not post_img:
+        return jsonify({"status":3}),200
+
+    post_status= 0
+    cur = con.cursor()
+    cur.execute("update post set post_title=%s,post_content=%s,post_status=%s,post_img=%s where post_id= %s",(post_title,post_content,post_status,post_img,post_id))
+    con.commit()
+    return jsonify({"status":4}),200
+
 
 @app.route('/quan/add/post', methods=['POST'])
 def quan_add_post():
