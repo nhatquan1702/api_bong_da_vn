@@ -339,13 +339,14 @@ def nhatquan_post_edit(post_id):
     con.commit()
     return jsonify({"status":4}),200
 
-@app.route('/quan/post/delete/<int:post_id>', methods=['POST'])
-def quan_delete_post(post_id):
+@app.route('/quan/post/delete', methods=['POST'])
+def quan_delete_post():
+    post_id = request.headers.get('post_id') 
     if not check_post_exist(post_id):
         return jsonify({'status':0}),200
     try:
         cur = con.cursor()
-        cur.execute("DELETE FROM post WHERE post_id=%s",(post_id))
+        cur.execute("DELETE FROM post WHERE post_id='"+str(post_id)+"'")
         con.commit()
     except Exception as e:
         con.rollback()
