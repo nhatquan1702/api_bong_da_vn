@@ -310,7 +310,7 @@ def quan_add_post_new(post_title,post_content):
 
     return jsonify({'status':5}),200
 
-@app.route('/quan/post/edit/<int:post_id>/<post_title>/<post_content>',methods=['POST'])
+@app.route('/quan/post/edit/<post_id>/<post_title>/<post_content>',methods=['POST'])
 def nhatquan_post_edit_new(post_id, post_title, post_content):
 
     if not check_post_exist(post_id):
