@@ -405,8 +405,7 @@ def quan_delete_post():
         return jsonify({'status':0}),200
     try:
         cur = con.cursor()
-        #cur.execute("DELETE FROM post WHERE post_id='"+str(post_id)+"'")
-        cur.execute("Update post set post_status=%s where post_id=%s",('-1',post_id))
+        cur.execute("DELETE FROM post WHERE post_id='"+str(post_id)+"'")
         con.commit()
     except Exception as e:
         con.rollback()
@@ -466,7 +465,6 @@ def post_add():
     con.commit()
     
     return jsonify({'status':6}),200
-
 
 #=========== Sủa bài viết =======
 # ========== Return status
