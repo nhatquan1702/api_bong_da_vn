@@ -297,7 +297,7 @@ def quan_add_post_new(post_title,post_content):
         return jsonify({"status":3}),200
 
     post_id= lastid+1
-    post_status= -2
+    post_status= 0
     post_view= 0
     post_create_time= datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
     email= request.headers.get('email')
@@ -359,7 +359,7 @@ def quan_add_post():
         return jsonify({"status":3}),200
 
     post_id= lastid+1
-    post_status= -2
+    post_status= 0
     post_view= 0
     post_create_time= datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
     email= request.headers.get('email')
@@ -405,8 +405,8 @@ def quan_delete_post():
         return jsonify({'status':0}),200
     try:
         cur = con.cursor()
-        cur.execute("update post set post_status= %s where post_id =%s",('-1',post_id))
         #cur.execute("DELETE FROM post WHERE post_id='"+str(post_id)+"'")
+        cur.execute("Update post set post_status=%s where post_id=%s",('-1',post_id))
         con.commit()
     except Exception as e:
         con.rollback()
@@ -985,7 +985,7 @@ def get_acc_all():
 
     try:
         cur = con.cursor()
-        cur.execute("SELECT email, password from accountapi where role>=0")
+        cur.execute("SELECT * from account where role>=0")
         rows = cur.fetchall()
     except:
         return jsonify({'status':1}),200
@@ -1017,7 +1017,7 @@ def get_acc_by_id(id_account):
 
     try:
         cur = con.cursor()
-        cur.execute("SELECT email, password from accountapi where id_account="+str(id_account))
+        cur.execute("SELECT * from account where id_account="+str(id_account))
         rows = cur.fetchall()
     except:
         return jsonify({'status':1}),200
@@ -2408,8 +2408,8 @@ def nhan_user(email,password):
     try:
         cur = con.cursor()
         cur.execute("""
-            SELECT email,password FROM accountapi 
-	        WHERE email=%s AND password= %s and role != %s
+            SELECT * FROM Account 
+	        WHERE account_email=%s AND account_password= %s and role != %s
          """,(email,password,'-1',))
         rows = cur.fetchall()
     except Exception as e:
@@ -2433,15 +2433,15 @@ def nhan_create_user(email,password):
     try:
         cur = con.cursor()
         cur.execute("""
-            SELECT email, password FROM accountapi 
-	        WHERE email=%s
+            SELECT * FROM Account 
+	        WHERE account_email=%s
          """,(email,))
         rows = cur.fetchall()
         if len(rows) != 0:
             return jsonify({'status':1}),200
         else:
             cur=con.cursor()
-            cur.execute("Insert into accountapi values (%s,%s,%s,'0')",('username',email,password,))
+            cur.execute("Insert into Account values (%s,%s,'0')",(email,password,))
             con.commit()
     except Exception as e:
         print(e)
@@ -2452,21 +2452,21 @@ def nhan_create_user(email,password):
 @app.route('/nhan/user/',methods=['POST'])
 def nhan_user_posts():
     request_data = request.get_json()
-    account_email = request_data['email']
-    account_password = request_data['password']
+    account_email = request_data['account_email']
+    account_password = request_data['account_password']
     role= request_data['role']
     try:
         cur = con.cursor()
         cur.execute("""
-            SELECT email, password FROM accountapi 
-	        WHERE email=%s and role != %s
+            SELECT * FROM Account 
+	        WHERE account_email=%s and role != %s
          """,(account_email,'-1',))
         rows = cur.fetchall()
         if len(rows) != 0:
             return jsonify({'status':1}),200
         else:
             cur=con.cursor()
-            cur.execute("Insert into accountapi values (%s,%s,%s,%s)",('username',account_email,account_password,role,))
+            cur.execute("Insert into Account values (%s,%s,%s)",(account_email,account_password,role,))
             con.commit()
     except Exception as e:
         print(e)
@@ -2479,15 +2479,15 @@ def nhan_user_del(account_email):
     try:
         cur = con.cursor()
         cur.execute("""
-            SELECT email, password FROM accountapi 
-	        WHERE email=%s
+            SELECT * FROM Account 
+	        WHERE account_email=%s
          """,(account_email,))
         rows = cur.fetchall()
         if len(rows) == 0:
             return jsonify({'status':1}),200
         else:
             cur=con.cursor()
-            cur.execute("Update accountapi set role=%s where email=%s",('-1',account_email))
+            cur.execute("Update account set role=%s where account_email=%s",('-1',account_email))
             con.commit()
     except Exception as e:
         print(e)
@@ -2498,21 +2498,21 @@ def nhan_user_del(account_email):
 @app.route('/nhan/user/',methods=['PUT'])
 def nhan_update_user():
     request_data = request.get_json()
-    account_email = request_data['email']
-    account_password = request_data['password']
+    account_email = request_data['account_email']
+    account_password = request_data['account_password']
     role= request_data['role']
     try:
         cur = con.cursor()
         cur.execute("""
-            SELECT email, password FROM accountapi 
-	        WHERE email=%s and role != %s
+            SELECT * FROM Account 
+	        WHERE account_email=%s and role != %s
          """,(account_email,'-1',))
         rows = cur.fetchall()
         if len(rows) == 0:
             return jsonify({'status':1}),200
         else:
             cur=con.cursor()
-            cur.execute("update accountapi set password=%s, role=%s where email=%s",(account_password,role,account_email,))
+            cur.execute("update account set account_password=%s, role=%s where account_email=%s",(account_password,role,account_email,))
             con.commit()
     except Exception as e:
         print(e)
@@ -2525,10 +2525,10 @@ def nhan_get_all_user():
     try:
         cur = con.cursor()
         cur.execute("""
-            select email,password
-            from accountapi
+            select *
+            from Account
             where role != %s
-            order by email asc
+            order by account_email asc
          """,('-1',))
         rows = cur.fetchall()
     except Exception as e:
@@ -2553,7 +2553,7 @@ def nhan_analysis():
         cur = con.cursor()
         cur.execute("""
             select * from
-            (select count(email)as count_account from accountapi)as account,
+            (select count(account_email)as count_account from account)as account,
             (select count(post_id)as count_post from post) as post,
             (select count(match_id)as count_match from match)as match
          """,)
