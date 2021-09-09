@@ -315,7 +315,7 @@ def quan_list_tin_chua_duyet():
     try:
         cur = con.cursor()
         cur.execute("""
-            select post.post_id, post.post_title, post_content, post.post_img, post.post_create_time, post.post_view 
+            select post.post_id, post.post_title, post_content, post.post_img, post.post_create_time, post.post_create_by 
             from post 
             where post_status = -2
             order by post.post_create_time desc
@@ -341,7 +341,7 @@ def quan_list_tin_da_duyet():
     try:
         cur = con.cursor()
         cur.execute("""
-            select post.post_id, post.post_title, post_content, post.post_img, post.post_create_time, post.post_view 
+            select post.post_id, post.post_title, post_content, post.post_img, post.post_create_time, post.post_create_by 
             from post 
             where post_status = 0 or post_status = 1
             order by post.post_create_time desc
