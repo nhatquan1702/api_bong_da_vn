@@ -275,6 +275,148 @@ def post_del(id_post):
 # 4: allow - not exists categroy
 # 5: allow - not contains img
 # 6: success
+@app.route('/quan/add/notconfirm/post/<post_title>/<post_content>', methods=['POST'])
+def quan_add_post_new_not_confirm(post_title,post_content):
+         
+    post_title=post_title.strip()
+    if not post_title:
+        return jsonify({"status":1}),200
+
+    post_content= post_content.strip()
+    if not post_content:
+        return jsonify({"status":2}),200
+    
+    
+    cur = con.cursor()
+    cur.execute("SELECT post_id from post order by post_id desc limit 1")
+    rows = cur.fetchall()
+    lastid= rows[0][0]
+
+    post_img = request.headers.get('post_img')
+    if not post_img:
+        return jsonify({"status":3}),200
+
+    post_id= lastid+1
+    post_status= -2
+    post_view= 0
+    post_create_time= datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+    email= request.headers.get('email')
+    if not email:
+        return jsonify({"status":4}),200
+
+    cur = con.cursor()
+    cur.execute("insert into post values (%s,%s,%s,%s,%s,%s,%s,%s)",(post_id,post_title,post_content,post_img,post_create_time,email,post_status,post_view))
+    con.commit()
+
+    return jsonify({'status':5}),200
+
+@app.route('/quan/list_tinchuaduyet',methods=['GET'])
+def quan_list_tin_chua_duyet():
+    try:
+        cur = con.cursor()
+        cur.execute("""
+            select post.post_id, post.post_title, post.post_img, post.post_create_time, post.post_view 
+            from post 
+            where post_status = -2
+            order by post.post_create_time desc
+        """)
+        rows = cur.fetchall()
+    except:
+        return jsonify({'status':0}),200
+    colname=[]
+    for i in range(0,5):
+        colname.append(cur.description[i][0])
+
+    rtlist=[]
+    for row in rows:
+        dic={}
+        for i in range(0,5):
+           dic[colname[i]]=row[i]
+        rtlist.append(dic)
+    js=json.dumps(rtlist,default = myconverter,ensure_ascii=False).encode('utf8')
+    return js,200
+
+@app.route('/quan/list_tindaduyet',methods=['GET'])
+def quan_list_tin_da_duyet():
+    try:
+        cur = con.cursor()
+        cur.execute("""
+            select post.post_id, post.post_title, post.post_img, post.post_create_time, post.post_view 
+            from post 
+            where post_status = 0 or post_status = 1
+            order by post.post_create_time desc
+        """)
+        rows = cur.fetchall()
+    except:
+        return jsonify({'status':0}),200
+    colname=[]
+    for i in range(0,5):
+        colname.append(cur.description[i][0])
+
+    rtlist=[]
+    for row in rows:
+        dic={}
+        for i in range(0,5):
+           dic[colname[i]]=row[i]
+        rtlist.append(dic)
+    js=json.dumps(rtlist,default = myconverter,ensure_ascii=False).encode('utf8')
+    return js,200
+
+@app.route('/quan/getbaiviet/<post_status>/<account_email>',methods=['GET'])
+def quan_getbaiviet_email(post_status, account_email):
+    try:
+        cur = con.cursor()
+        cur.execute("""
+            select *
+            from post
+            where post_status=%s and post_create_by=%s
+         """,(int(post_status),account_email))
+        rows = cur.fetchall()
+    except Exception as e:
+        print(e)
+        return jsonify({'status':0}),200
+
+    colname=[]
+    for i in range(0,8):
+        colname.append(cur.description[i][0])
+
+    rtlist=[]
+    for row in rows:
+        dic={}
+        for i in range(0,8):
+            dic[colname[i]]=str(row[i])
+        rtlist.append(dic)
+    js=json.dumps(rtlist,default = myconverter,ensure_ascii=False).encode('utf8')
+    return js,200
+
+@app.route('/quan/post/duyettin/<post_id>',methods=['POST'])
+def nhatquan_duyettin(post_id):
+
+    if not check_post_exist(post_id):
+        return jsonify({'status':0}),200
+
+    post_status= 0
+    cur = con.cursor()
+    cur.execute("update post set post_status=%s where post_id= %s",(post_status,post_id))
+    con.commit()
+    return jsonify({"status":1}),200
+
+@app.route('/quan/post/delete/new', methods=['POST'])
+def quan_delete_post_new():
+    post_id = request.headers.get('post_id') 
+    post_status = -1
+    if not check_post_exist(post_id):
+        return jsonify({'status':0}),200
+    try:
+        cur = con.cursor()
+        cur.execute("update post set post_status=%s where post_id= %s",(post_status,str(post_id)))
+        con.commit()
+    except Exception as e:
+        con.rollback()
+        print(e)
+        return jsonify({'status':1}),200
+    return jsonify({'status':2}),200
+
 @app.route('/quan/add/post/<post_title>/<post_content>', methods=['POST'])
 def quan_add_post_new(post_title,post_content):
          
@@ -328,9 +470,8 @@ def nhatquan_post_edit_new(post_id, post_title, post_content):
     if not post_img:
         return jsonify({"status":3}),200
 
-    post_status= 0
     cur = con.cursor()
-    cur.execute("update post set post_title=%s,post_content=%s,post_status=%s,post_img=%s where post_id= %s",(post_title,post_content,post_status,post_img,post_id))
+    cur.execute("update post set post_title=%s,post_content=%s,post_img=%s where post_id= %s",(post_title,post_content,post_img,post_id))
     con.commit()
     return jsonify({"status":4}),200
 
