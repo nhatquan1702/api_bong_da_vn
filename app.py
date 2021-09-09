@@ -338,14 +338,16 @@ def quan_list_tin_chua_duyet():
 
 @app.route('/quan/list_tindaduyet',methods=['GET'])
 def quan_list_tin_da_duyet():
+    status1 = -2
+    status2 = -1
     try:
         cur = con.cursor()
         cur.execute("""
             select post.post_id, post.post_title, post_content, post.post_img, post.post_create_time, post.post_create_by 
             from post 
-            where post_status = 0 or post_status = 1
+            where post_status != %s and post_status != %s
             order by post.post_create_time desc
-        """)
+        """,(status1, status2))
         rows = cur.fetchall()
     except:
         return jsonify({'status':0}),200
@@ -358,6 +360,36 @@ def quan_list_tin_da_duyet():
         dic={}
         for i in range(0,5):
            dic[colname[i]]=row[i]
+        rtlist.append(dic)
+    js=json.dumps(rtlist,default = myconverter,ensure_ascii=False).encode('utf8')
+    return js,200
+
+@app.route('/quan/getbaiviet/daduyet',methods=['GET'])
+def quan_list_tin_da_duyet_canhan():
+    account_email=request.headers.get('account_email') 
+    status1 = -2
+    status2 = -1
+    try:
+        cur = con.cursor()
+        cur.execute("""
+            select *
+            from post
+            where post_status != %s and post_status != %s and post_create_by=%s
+         """,(status1,status2,str(account_email)))
+        rows = cur.fetchall()
+    except Exception as e:
+        print(e)
+        return jsonify({'status':0}),200
+
+    colname=[]
+    for i in range(0,8):
+        colname.append(cur.description[i][0])
+
+    rtlist=[]
+    for row in rows:
+        dic={}
+        for i in range(0,8):
+            dic[colname[i]]=str(row[i])
         rtlist.append(dic)
     js=json.dumps(rtlist,default = myconverter,ensure_ascii=False).encode('utf8')
     return js,200
@@ -1483,7 +1515,7 @@ def quan_list_tinmoi():
         cur.execute("""
             select post.post_id, post.post_title, post.post_img, post.post_create_time, post.post_view 
             from post 
-            where post_status != -1
+            where post_status = 0
             order by post.post_create_time desc
         """)
         rows = cur.fetchall()
@@ -1509,7 +1541,7 @@ def quan_list_tinphobien():
         cur.execute("""
             select post.post_id, post.post_title, post.post_img, post.post_create_time, post.post_view 
             from post 
-            where post_status != -1
+            where post_status = 1
             order by post.post_create_time desc, post.post_view desc
         """)
         rows = cur.fetchall()
