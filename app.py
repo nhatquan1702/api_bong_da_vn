@@ -2834,14 +2834,16 @@ def khai_gettrandau(date):
 
 @app.route('/khai/getbaiviet/<email>/<date>',methods=['GET'])
 def khai_getbaiviet_date_email(email,date):
+    status1 = -1
+    status2 = -2
     try:
         cur = con.cursor()
         cur.execute("""
             SELECT * 
             From post
-            WhERE DATE(post_create_time) = %s and post_create_by =%s
+            WhERE DATE(post_create_time) = %s and post_create_by =%s and post_status !=%s and  post_status !=%s
             ORDER BY post_view desc
-         """,(date,email,))
+         """,(date,email,status1,status2))
         rows = cur.fetchall()
     except Exception as e:
         print(e)
